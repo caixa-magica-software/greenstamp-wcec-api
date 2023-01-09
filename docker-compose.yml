@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+
+  analyzer-dummy:
+    container_name: analyzer-dummy
+    image: greenstamp/analyzer-dummy
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    environment:
+      DELIVER_RESULTS_ENDPOINT: ${DELIVER_RESULTS_ENDPOINT}
