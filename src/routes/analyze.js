@@ -1,12 +1,14 @@
 const axios = require('axios')
 const router = require('express').Router()
+const multer = require('multer')
+const upload = multer({ storage: multer.memoryStorage() })
 
-router.post('/', (req, res) => {
+router.post('/', upload.single("binary"), (req, res) => {
   const { appName, packageName, version, url, metadata, tests } = req.body
   if(appName == null || appName == "") res.send(400).send({ message: "appName name cannot be null or empty" });
   else if(packageName == null || packageName == "") res.send(400).send({ message: "packageName name cannot be null or empty" });
   else if(version != null && version == "") res.send(400).send({ message: "version name cannot be null or empty" });
-  else if(url != null && url == "") res.send(400).send({ message: "url name cannot be null or empty" });
+  else if(url != null && url == "" && req.file == null) res.send(400).send({ message: "url and binary cannot be null or empty" });
   else if(metadata != null && metadata == "") res.send(400).send({ message: "metadata name cannot be null or empty" });
   else if(tests != null && tests.length == 0) res.send(400).send({ message: "tests name cannot be null or empty" });
   else {
