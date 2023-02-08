@@ -4,7 +4,8 @@ const multer = require('multer')
 const upload = multer({ storage: multer.memoryStorage() })
 
 router.post('/', upload.single("binary"), (req, res) => {
-  const { appName, packageName, version, url, metadata, tests } = req.body
+  const app = JSON.parse(req.body.app)
+  const { appName, packageName, version, url, metadata, tests } = app
   if(appName == null || appName == "") res.send(400).send({ message: "appName name cannot be null or empty" });
   else if(packageName == null || packageName == "") res.send(400).send({ message: "packageName name cannot be null or empty" });
   else if(version != null && version == "") res.send(400).send({ message: "version name cannot be null or empty" });
@@ -12,18 +13,18 @@ router.post('/', upload.single("binary"), (req, res) => {
   else if(metadata != null && metadata == "") res.send(400).send({ message: "metadata name cannot be null or empty" });
   else if(tests != null && tests.length == 0) res.send(400).send({ message: "tests name cannot be null or empty" });
   else {
-    setTimeout(() => execute(req.body), 10 * 1000)
+    setTimeout(() => execute(appName, packageName, version, url, metadata, tests), 10 * 1000)
     res.status(200).send()
   }
 })
 
-const execute = (body) => {
-  axios.post(process.env.DELIVER_RESULTS_ENDPOINT, {
-    appName: body.appName,
-    packageName: body.packageName,
-    version: body.version,
+const execute = (appName, packageName, version, url, metadata, tests ) => {
+  axios.put(process.env.DELIVER_RESULTS_ENDPOINT, {
+    appName: appName,
+    packageName: packageName,
+    version: version,
     timestamp: Date.now(),
-    results: doTests(body.tests)
+    results: doTests(tests)
   })
 }
 
