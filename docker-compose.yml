@@ -2,7 +2,7 @@ version: '3'
 
 services:
 
-  analyzer-dummy:
+  analyzer-kadabra-api:
     container_name: analyzer-kadabra-api
     image: greenstamp/analyzer-kadabra-api
     build: 
