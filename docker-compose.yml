@@ -3,8 +3,8 @@ version: '3'
 services:
 
   analyzer-dummy:
-    container_name: analyzer-dummy
-    image: greenstamp/analyzer-dummy
+    container_name: analyzer-kadabra-api
+    image: greenstamp/analyzer-kadabra-api
     build: 
       context: .
       dockerfile: Dockerfile
@@ -13,3 +13,5 @@ services:
       - 3333:3000
     environment:
       DELIVER_RESULTS_ENDPOINT: ${DELIVER_RESULTS_ENDPOINT}
+    volumes:
+      - '../data/analyzer-kadabra-api:/data'

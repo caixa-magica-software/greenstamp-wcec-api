@@ -1,0 +1,12 @@
+{
+	"sources": [
+		"./data/uploads/rtp-noticias.apk"
+	],
+	"total": 0,
+	"detectors": {
+		"Excessive Method Calls Detector": [],
+		"HashMap Usage Detector": [],
+		"Internal Getter Detector": [],
+		"Member Ignoring Method Detector": []
+	}
+}
