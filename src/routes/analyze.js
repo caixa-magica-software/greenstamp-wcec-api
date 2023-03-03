@@ -55,11 +55,15 @@ const doTests = (apkFileName, tests) => {
       fs.readFile('results.json', (err, data) => {
         if (err) reject(err);
         const results = JSON.parse(data);
-        const testResults = Object.keys(results.detectors).map((detector) => ({
-          testName: detector,
-          testResult: results.detectors[detector].length,
-          unit: "warnings"
-        }))
+        const testResults = tests.map(test => {
+          const result = Object.keys(results.detectors).find(detector => detector == test.name)
+          return {
+            name: test.name,
+            parameters: test.parameters,
+            result: result ? result.length : "NA",
+            unit: "warnings"
+          }
+        })
         console.log("Results for:", apkFileName)
         console.log(testResults)
         // This analyzer does not support arguments to define which analyzers should be used dynamically
