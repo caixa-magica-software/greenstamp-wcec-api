@@ -36,13 +36,15 @@ router.post('/', upload.single("binary"), (req, res) => {
 const execute = (apkFileName, appName, packageName, version, url, metadata, tests) => {
   doTests(apkFileName, tests)
     .then(results => {
-      axios.put(process.env.DELIVER_RESULTS_ENDPOINT || "http://localhost:3000/api/result", {
+      const testResponse = {
         appName: appName,
         packageName: packageName,
         version: version,
         timestamp: Date.now(),
         results: results
-      })
+      }
+      console.log("Sending test response...", testResponse)
+      axios.put(process.env.DELIVER_RESULTS_ENDPOINT || "http://localhost:3000/api/result", testResponse)
     })
     .catch(error => console.log("ERROR:", error))
 }
