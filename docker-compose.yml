@@ -14,4 +14,4 @@ services:
     environment:
       DELIVER_RESULTS_ENDPOINT: ${DELIVER_RESULTS_ENDPOINT}
     volumes:
-      - '/data/analyzer-kadabra-api:/data'
+      - '/data/greenstamp/analyzer-kadabra-api:/data'
