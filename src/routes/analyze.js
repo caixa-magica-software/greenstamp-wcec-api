@@ -71,7 +71,7 @@ const doTests = (apkFileName, tests) => {
         const testNames = tests.map(test => test.name)
         console.log(testNames)
         console.log("After filtering")
-        const filteredTests = testResults.filter((testResult) => testNames.indexOf(testResult.testName) >= 0)
+        const filteredTests = testResults.filter((testResult) => testNames.indexOf(testResult.testName) <= 0)
         console.log("Filtered test results:", filteredTests)
         resolve(filteredTests)
       })
