@@ -13,10 +13,11 @@ const storage = multer.diskStorage({
     cb(null, file.originalname)
   }
 })
+
 const upload = multer({storage: storage})
 
 router.post('/', upload.single("binary"), (req, res) => {
-  console.log("Processing tests for", req.file.filename)
+  console.log("Analyzing file:", req.file)
   console.log("Parameters received:", req.body.app)
   const app = JSON.parse(req.body.app)
   const { appName, packageName, version, url, metadata, tests } = app
@@ -51,7 +52,7 @@ const doTests = (apkFileName, tests) => {
     exec(`java -jar /data/kadabra/kadabra.jar /data/kadabra/main.js -p /data/uploads/${apkFileName} -WC -APF package! -o output -s -X -C`, (error, stdout, stderr) => {
       fs.readFile('results.json', (err, data) => {
         if (err) reject(err);
-        let results = JSON.parse(data);
+        const results = JSON.parse(data);
         const testResults = Object.keys(results.detectors).map((detector) => ({
           testName: detector,
           testResult: results.detectors[detector].length,
@@ -60,9 +61,11 @@ const doTests = (apkFileName, tests) => {
         console.log("Results for:", apkFileName)
         console.log(testResults)
         // This analyzer does not support arguments to define which analyzers should be used dynamically
-        console.log("After filtering")
+        console.log("Should filter for...")
         const testNames = tests.map(test => test.name)
-        const filteredTests = testResults.filter((testResult) => testNames.indexOf(testResult.testName))
+        console.log(testNames)
+        console.log("After filtering")
+        const filteredTests = testResults.filter((testResult) => testNames.indexOf(testResult.testName) >= 0)
         console.log("Filtered test results:", filteredTests)
         resolve(filteredTests)
       })
