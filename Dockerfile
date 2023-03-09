@@ -1,10 +1,8 @@
 FROM node:14-alpine
 
-RUN apk add openjdk11
-
-RUN mkdir /analyzer-kadabra-api
+RUN mkdir /analyzer-dummy
 # Create app directory
-WORKDIR /analyzer-kadabra-api
+WORKDIR /analyzer-dummy
 
 COPY ./package*.json ./
 

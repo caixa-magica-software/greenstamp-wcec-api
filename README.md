@@ -1,4 +1,4 @@
-# energytooltemplate
+# analyzer-kadabra-api
 
 Declare env variable DELIVER_RESULTS_ENDPOINT with the endpoint which collects the results.
 e.g.
