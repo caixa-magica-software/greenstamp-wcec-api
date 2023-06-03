@@ -2,14 +2,17 @@ version: '3'
 
 services:
 
-  analyzer-dummy:
-    container_name: analyzer-dummy
-    image: greenstamp/analyzer-dummy
+  wcec-api:
+    container_name: wcec-api
+    image: wcec-api
     build: 
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - 3333:3000
+      - 4002:4002
+    volumes:
+      - /data/greenstamp/pipe:/hostpipe
+      - /data/greenstamp/wcec:/test
     environment:
-      DELIVER_RESULTS_ENDPOINT: ${DELIVER_RESULTS_ENDPOINT}
+      DELIVER_RESULTS_ENDPOINT: 'http://51.210.255.156:3000/api/result'

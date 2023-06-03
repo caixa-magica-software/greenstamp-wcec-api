@@ -1,8 +1,8 @@
 FROM node:14-alpine
 
-RUN mkdir /analyzer-dummy
+RUN mkdir /wcec-api-analyzer
 # Create app directory
-WORKDIR /analyzer-dummy
+WORKDIR /wcec-api-analyzer
 
 COPY ./package*.json ./
 
