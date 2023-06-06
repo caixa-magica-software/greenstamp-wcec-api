@@ -2,6 +2,8 @@ const axios = require('axios')
 const router = require('express').Router()
 const multer = require('multer')
 const fs = require('fs');
+const https = require('https');
+const path = require('path')
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -34,108 +36,187 @@ router.post('/', upload.single("binary"), (req, res) => {
   else if(metadata != null && metadata == "") res.send(400).send({ message: "metadata name cannot be null or empty" });
   else if(tests != null && tests.length == 0) res.send(400).send({ message: "tests name cannot be null or empty" });
   else {
-    setTimeout(() => execute(appName, packageName, version, tests), 1 * 1000)
-    res.status(200).send()
+    if(req.file != null) {
+      try{
+        execute(req.file.destination, req.file.path, appName, packageName, version, url, metadata, tests)
+      } catch(error){
+        console.log(error)
+      }
+      res.status(200).send()
+    } else {
+      downloadApk(url)
+        .then(result => {
+          console.log("result.resultsPath: " + result.resultsPath)
+          console.log("result.apkPath: " + result.apkPath)
+          try{
+            execute(result.resultsPath, result.apkPath, appName, packageName, version, url, metadata, tests)
+          } catch(error){
+            console.log(error)
+          }
+          res.status(200).send()
+        })
+        .catch(error => res.status(500).json({ error: error }))
+    }    
   }
 })
 
-const execute = async (appName, packageName, version, tests) => {
-  const resultsEndpoint = process.env.DELIVER_RESULTS_ENDPOINT || "http://localhost:3000/api/result"
-  console.log("Responde to server");
-  axios.put(resultsEndpoint, {
-    appName: appName,
-    packageName: packageName,
-    version: version,
-    timestamp: Date.now(),
-    results: await doTests(tests)
+const downloadApk = (url) => {
+  return new Promise((resolve, reject) => {
+    const ts = Date.now()
+    const resultsDir = process.env.UPLOADS_HOME || "./data/uploads"
+    const resultsPath = `${resultsDir}/${ts}`
+
+    fs.mkdirSync(resultsPath, { recursive: true })
+    const fileName = `${ts}.apk`
+    const output = fs.createWriteStream(`${resultsPath}/${fileName}`)
+
+    console.log("resultsDir: " + resultsDir);
+    console.log("resultsPath: " + resultsPath);
+    console.log("fileName: " + fileName);
+
+    console.log("Going to download from:", url)
+    console.log("Going to download on:", `${resultsPath}/${fileName}`)
+    https.get(url, (res) => {
+      console.log('apk download status code:', res.statusCode);
+      if(res.statusCode != 200){
+        reject({ code: res.statusCode, message: "Error during download" });
+        remove(resultsPath)
+      } else {
+        console.log("Download OK statusCode:", res.statusCode)
+      }
+      res.pipe(output);
+      resolve({ resultsPath: resultsPath, apkPath: `${resultsPath}/${fileName}`})
+    }).on('error', (error) => {
+      console.log("Error during downlad:", error)
+      reject(error)
+    });
   })
-  .catch(error => console.log("Error:", error))
-  console.log("Responded to server");
 }
 
-const doTests = async (tests) => {
+const remove = (resultsPath) => {
+  console.log("remove tests for: " + resultsPath)
+  // delete directory recursively
+  fs.rm(resultsPath, { recursive: true }, err => {
+    if (err) {
+      throw err
+    }
 
-  const pipePath = "/hostpipe"
-  const outputPath = "/test/output.txt"
-  const commandToRun = "docker run -it -v /home/campos/git/greenstamp/apk:/apks --rm wcec /bin/bash /apks/rtp_new.apk 2>&1 | tee /data/greenstamp/wcec/output.txt"
+    console.log(`${resultsPath} is deleted!`)
+  })
+}
 
-  console.log("delete previous output")
-  if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath)
+const execute = (resultsPath, apkPath, appName, packageName, version, url, metadata, tests) => {
+  console.log("Executing tests for:", apkPath)
+  const resultsEndpoint = process.env.DELIVER_RESULTS_ENDPOINT || "http://localhost:3000/api/result"
+  doTests(resultsPath, apkPath, tests)
+    .then(async results => {
+      const testResponse = {
+        appName: appName,
+        packageName: packageName,
+        version: version,
+        timestamp: Date.now(),
+        results: results
+      }
+      console.log("Sending test response...", testResponse)
+      try{
+        await axios.put(resultsEndpoint, testResponse)
+      } catch(error){
+        console.log(error);
+      }
+     
+    }).catch(error => console.log("ERROR:", error))
+}
 
-  console.log("writing to pipe...")
-  const wstream = fs.createWriteStream(pipePath)
-  wstream.write(commandToRun)
-  wstream.close()
-
-  console.log("waiting for output.txt...") //there are better ways to do that than setInterval
-  let timeout = 3600000 //stop waiting after 1 hour (something might be wrong)
-  const timeoutStart = Date.now()
-  
-
-  function waitForVariableChange(variable) {
-    return new Promise((resolve) => {
-        const myLoop = setInterval(function () {
-          if (Date.now() - timeoutStart > timeout) {
-              clearInterval(myLoop)
-              console.log("timed out")
-              rounded = 0
-              resolve(variable.value);
-          } else {
-              //if output.txt exists, read it
-              console.log("output.txt exists? ")
-              if (fs.existsSync(outputPath)) {
-                console.log("output.txt Finished??")
-                var data = fs.readFileSync(outputPath).toString()
-                if(data.indexOf('Finished') >= 0){
-                  console.log("###################### Finished ########################")
-                  console.log(Date.now() - timeoutStart / ( 60 * 1000 )) // Test time in minutes
+const doTests = (resultsPath, apkPath, tests) => {
+  return new Promise((resolve, reject) => {
+    const pipePath = "/hostpipe"
     
-                  const pattern = /\d+\.\d+/g; // Matches all occurrences of "number.number"
+    console.log("doTests resultsPath:" + resultsPath)
+    console.log("doTests apkPath:" + apkPath)
+    const fileName = path.basename(resultsPath)
+    console.log("fileName:" + fileName)
+    const outputPath = "/test/" + fileName + ".txt"
+    console.log(outputPath)
+
+    //const commandToRun = "docker run -it -v /home/campos/git/greenstamp/apk:/apks --rm wcec /bin/bash /apks/rtp_new.apk 2>&1 | tee /data/greenstamp/wcec/output.txt"
     
-                  const matches = [...data.matchAll(pattern)];
-                  if (matches.length > 0) {
-                    console.log('Found matches:');
-                    matches.forEach((match) => console.log(match[0]));
-                    const floatValue = parseFloat(matches[matches.length-1]);
-                    variable.value = Math.round(floatValue);
-                    console.log("value:" + variable.value);
-                    resolve(variable.value);
-                  } else {
-                    console.log('No matches found');
-                  }
+    const commandToRun = "docker run -it -v /data/greenstamp/analyzer-wcec-api/" + fileName + ":/apks --rm wcec /bin/bash /apks/"+ fileName + ".apk"+ " 2>&1 | tee /data/greenstamp/wcec/" + fileName + ".txt"
+
+    console.log(commandToRun)
+
+    console.log("tests: " + tests)
+    console.log("delete previous output")
+    if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath)
+
+    console.log("writing to pipe...")
+    const wstream = fs.createWriteStream(pipePath)
+    wstream.write(commandToRun)
+    wstream.close()
+
+    console.log("waiting for test output ...") //there are better ways to do that than setInterval
+    let timeout = 3600000 //stop waiting after 1 hour (something might be wrong)
+    const timeoutStart = Date.now()
     
-    
+
+    async function waitForVariableChange() {
+      var value;
+      return new Promise((resolve, reject) => {
+          const myLoop = setInterval(function () {
+            if (Date.now() - timeoutStart > timeout) {
                 clearInterval(myLoop)
-                
-                if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath) //delete the output file
-    
+                console.log("timed out")
+                rounded = 0
+                reject(new Error('Something is not right!'));
+            } else {
+                //if output.txt exists, read it
+                console.log("Check if results file exist ")
+                if (fs.existsSync(outputPath)) {
+                  console.log("Waiting for test finish")
+                  var data = fs.readFileSync(outputPath).toString()
+                  if(data.indexOf('Finished') >= 0){
+                    console.log("Rest Finished")
+                    console.log(Date.now() - timeoutStart / ( 60 * 1000 )) // Test time in minutes
+      
+                    const pattern = /\d+\.\d+/g; // Matches all occurrences of "number.number"
+      
+                    const matches = [...data.matchAll(pattern)];
+                    if (matches.length > 0) {
+                      console.log('Found matches:');
+                      matches.forEach((match) => console.log(match[0]));
+                      const floatValue = parseFloat(matches[matches.length-1]);
+                      value = Math.round(floatValue);
+                      console.log("value:" + value);
+                      resolve(value);
+                    } else {
+                      console.log('No matches found');
+                      reject(new Error('Something is not right!'));
+                    }
+
+                    clearInterval(myLoop)
+                    
+                    if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath) //delete the output file
+                  }
                 }
-              }
-          }
-      }, 5000);
-    });
-  }
+            }
+        }, 5000);
+      });
+    }
 
-  const variable = {
-    hasChanged: false,
-    value: 0,
-  };
-
-  async function myFunction() {
-    console.log('Waiting for variable change...');
-    await waitForVariableChange(variable);
-    console.log('Variable has changed:', variable.value);
-  }
-  
-  await myFunction();
-
-  console.log("###################### Return: " + variable.value + "########################")
-  return tests.map(test => ({
-    name: test.name,
-    parameters: test.parameters,
-    result: variable.value,
-    unit: "Wh"
-  }))
+    waitForVariableChange()
+    .then((result) => {
+      console.log("result: " + result);
+      const testResults = tests.map(test => {
+        return {
+          name: test.name,
+          parameters: test.parameters,
+          result: result,
+          unit: "warnings"
+        }
+      })
+      remove(resultsPath)
+      resolve(testResults)
+    }).catch(error => reject(new Error('Something is not right!')));
+  })
 }
 
 module.exports = router
