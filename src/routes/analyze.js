@@ -173,16 +173,22 @@ const doTests = (resultsPath, apkPath, tests) => {
                 if (fs.existsSync(outputPath)) {
                   console.log("Waiting for test finish")
                   var data = fs.readFileSync(outputPath).toString()
-                  if(data.indexOf('Finished') >= 0){
-                    console.log("Rest Finished")
+                  if(data.indexOf('Done clean script') >= 0){
+                    console.log("Test Finished")
                     console.log(Date.now() - timeoutStart / ( 60 * 1000 )) // Test time in minutes
       
                     const pattern = /\d+\.\d+/g; // Matches all occurrences of "number.number"
       
-                    const matches = [...data.matchAll(pattern)];
+                    let match;
+                    const matches = [];
+
+                    while ((match = pattern.exec(data)) !== null) {
+                      matches.push(match[0]);
+                      console.log(match[0])
+                    }
+
                     if (matches.length > 0) {
-                      console.log('Found matches:');
-                      matches.forEach((match) => console.log(match[0]));
+                      console.log("Found matches length: " + matches.length);
                       const floatValue = parseFloat(matches[matches.length-1]);
                       value = Math.round(floatValue);
                       console.log("value:" + value);
