@@ -10,7 +10,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - 4002:4002
+      - 4002:3000
     volumes:
       - /data/greenstamp/pipe:/hostpipe
       - /data/greenstamp/wcec:/test
