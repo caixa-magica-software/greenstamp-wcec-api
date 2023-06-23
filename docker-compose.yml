@@ -16,5 +16,5 @@ services:
       - /data/greenstamp/wcec:/test
       - /data/greenstamp/analyzer-wcec-api:/data
     environment:
-      DELIVER_RESULTS_ENDPOINT: 'http://localhost:3000/api/result'
+      DELIVER_RESULTS_ENDPOINT: 'http://51.210.255.156:3000/api/result'
       UPLOADS_HOME: '/data'
