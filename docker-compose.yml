@@ -2,9 +2,9 @@ version: '3'
 
 services:
 
-  wcec-api:
-    container_name: wcec-api
-    image: wcec-api
+  analyzer-wcec-api:
+    container_name: analyzer-wcec-api
+    image:  greenstamp/analyzer-wcec-api
     build: 
       context: .
       dockerfile: Dockerfile
