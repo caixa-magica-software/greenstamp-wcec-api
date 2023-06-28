@@ -55,7 +55,10 @@ router.post('/', upload.single("binary"), (req, res) => {
           }
           res.status(200).send()
         })
-        .catch(error => res.status(500).json({ error: error }))
+        .catch(error => {
+          console.log("downloadApk error: " + error)
+          res.status(500).json({ error: error });
+        })
     }    
   }
 })
