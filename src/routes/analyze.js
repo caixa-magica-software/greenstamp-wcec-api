@@ -141,7 +141,7 @@ const doTests = (resultsPath, apkPath, tests) => {
     const outputPath = "/test/" + fileName + ".txt"
     console.log(outputPath)
     
-    const commandToRun = "docker run -d --name " + fileName + " -v /data/greenstamp/analyzer-wcec-api/" + fileName + ":/apks --rm wcec-ubi /bin/bash /apks/"+ fileName + ".apk"+ " > /data/greenstamp/wcec/" + fileName + ".txt"
+    const commandToRun = "docker run -d --name " + fileName + " -v /data/greenstamp/analyzer-wcec-api/" + fileName + ":/apks --rm wcec-ubi /bin/bash /apks/"+ fileName + ".apk"+ " > /data/greenstamp/wcec/" + fileName + ".txt 2>&1"
     console.log(commandToRun)
 
     console.log("tests: " + tests)
