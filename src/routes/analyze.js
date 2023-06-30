@@ -200,7 +200,7 @@ const doTests = (resultsPath, apkPath, tests) => {
 
                     clearInterval(myLoop)
                     
-                    //if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath) //delete the output file
+                    if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath) //delete the output file
                   }
                 }
             }
@@ -219,7 +219,7 @@ const doTests = (resultsPath, apkPath, tests) => {
           unit: "detections"
         }
       })
-      //remove(resultsPath)
+      remove(resultsPath)
       resolve(testResults)
     }).catch(error => reject(new Error('Something is not right!')));
   })
