@@ -141,7 +141,7 @@ const doTests = (resultsPath, apkPath, tests) => {
     const outputPath = "/test/" + fileName + ".txt"
     console.log(outputPath)
     
-    const commandToRun = "docker run -v /data/greenstamp/analyzer-wcec-api/" + fileName + ":/apks --rm wcec-ubi /bin/bash /apks/"+ fileName + ".apk"+ " 2>&1 | tee /data/greenstamp/wcec/" + fileName + ".txt"
+    const commandToRun = "docker run -d --name " + fileName + " -v /data/greenstamp/analyzer-wcec-api/" + fileName + ":/apks --rm wcec-ubi /bin/bash /apks/"+ fileName + ".apk"+ " 2>&1 | tee /data/greenstamp/wcec/" + fileName + ".txt"
     console.log(commandToRun)
 
     console.log("tests: " + tests)
@@ -200,7 +200,7 @@ const doTests = (resultsPath, apkPath, tests) => {
 
                     clearInterval(myLoop)
                     
-                    if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath) //delete the output file
+                    //if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath) //delete the output file
                   }
                 }
             }
@@ -219,7 +219,7 @@ const doTests = (resultsPath, apkPath, tests) => {
           unit: "detections"
         }
       })
-      remove(resultsPath)
+      //remove(resultsPath)
       resolve(testResults)
     }).catch(error => reject(new Error('Something is not right!')));
   })
