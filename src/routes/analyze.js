@@ -141,7 +141,7 @@ const doTests = (resultsPath, apkPath, tests) => {
     const outputPath = "/test/" + fileName + ".txt"
     console.log(outputPath)
     
-    const commandToRun = "docker run -v /data/greenstamp/analyzer-wcec-api/" + fileName + ":/apks --rm wcec-ubi /bin/bash /apks/"+ fileName + ".apk"+ " 2>&1 | tee /data/greenstamp/wcec/" + fileName + ".txt"    
+    const commandToRun = "docker run --name " + fileName + " -v /data/greenstamp/analyzer-wcec-api/" + fileName + ":/apks wcec-ubi /bin/bash /apks/"+ fileName + ".apk"+ " 2>&1 | tee /data/greenstamp/wcec/" + fileName + ".txt &"    
     console.log(commandToRun)
 
     console.log("tests: " + tests)
@@ -171,7 +171,7 @@ const doTests = (resultsPath, apkPath, tests) => {
                 //if output.txt exists, read it
                 console.log("Check if results file exist: " + outputPath)
                 if (fs.existsSync(outputPath)) {
-                  console.log("Waiting for test finish")
+                  console.log("Waiting for test finish" + outputPath)
                   var data = fs.readFileSync(outputPath).toString()
                   if(data.indexOf('Done clean script') >= 0){
                     console.log("Test Finished")
