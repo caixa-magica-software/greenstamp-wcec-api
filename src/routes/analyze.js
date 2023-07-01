@@ -132,6 +132,8 @@ const execute = (resultsPath, apkPath, appName, packageName, version, url, metad
 
 const doTests = (resultsPath, apkPath, tests) => {
   return new Promise((resolve, reject) => {
+    const timeoutStart = Date.now()
+    var testTime = 0
     const pipePath = "/hostpipe"
     
     console.log("doTests resultsPath:" + resultsPath)
@@ -155,9 +157,6 @@ const doTests = (resultsPath, apkPath, tests) => {
 
     console.log("waiting for test output ...") //there are better ways to do that than setInterval
     let timeout = 4 * 3600000 //stop waiting after 4 hour (something might be wrong)
-    const timeoutStart = Date.now()
-    
-
     async function waitForVariableChange() {
       var value;
       return new Promise((resolve, reject) => {
@@ -175,7 +174,8 @@ const doTests = (resultsPath, apkPath, tests) => {
                   var data = fs.readFileSync(outputPath).toString()
                   if(data.indexOf('Done clean script') >= 0){
                     console.log("Test time (ms): " + (Date.now() - timeoutStart) ) // Test time in seconds
-                    console.log("Test time (minutes): " + (Date.now() - timeoutStart) / 1000 / 60) // Test time in minutes
+                    testTime = ( Date.now() - timeoutStart ) / 1000 / 60
+                    console.log("Test time (minutes): " + testTime) // Test time in minutes
       
                     const pattern = /\d+\.\d+/g; // Matches all occurrences of "number.number"
       
@@ -216,7 +216,8 @@ const doTests = (resultsPath, apkPath, tests) => {
           name: test.name,
           parameters: test.parameters,
           result: result,
-          unit: "detections"
+          unit: "detections",
+          time: testTime,
         }
       })
       remove(resultsPath)
