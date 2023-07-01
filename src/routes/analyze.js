@@ -217,7 +217,7 @@ const doTests = (resultsPath, apkPath, tests) => {
           parameters: test.parameters,
           result: result,
           unit: "detections",
-          optional: testTime,
+          optional: testTime.toFixed(3),
         }
       })
       remove(resultsPath)
