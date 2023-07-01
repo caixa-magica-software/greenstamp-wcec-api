@@ -174,8 +174,8 @@ const doTests = (resultsPath, apkPath, tests) => {
                   console.log("Waiting for test finish" + outputPath)
                   var data = fs.readFileSync(outputPath).toString()
                   if(data.indexOf('Done clean script') >= 0){
-                    console.log("Test Finished")
-                    console.log(Date.now() - timeoutStart / ( 60 * 1000 )) // Test time in minutes
+                    console.log("Test time (ms): " + (Date.now() - timeoutStart) ) // Test time in seconds
+                    console.log("Test time (minutes): " + (Date.now() - timeoutStart) / 1000 / 60) // Test time in minutes
       
                     const pattern = /\d+\.\d+/g; // Matches all occurrences of "number.number"
       
