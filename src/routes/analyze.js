@@ -156,7 +156,7 @@ const doTests = (resultsPath, apkPath, tests) => {
     wstream.close()
 
     console.log("waiting for test output ...") //there are better ways to do that than setInterval
-    let timeout = 4 * 3600000 //stop waiting after 4 hour (something might be wrong)
+    let timeout = 24 * 3600000 //stop waiting after 24 hour (something might be wrong)
     async function waitForVariableChange() {
       var value;
       return new Promise((resolve, reject) => {
