@@ -164,7 +164,6 @@ const doTests = (resultsPath, apkPath, tests) => {
             if (Date.now() - timeoutStart > timeout) {
                 clearInterval(myLoop)
                 console.log("timed out")
-                rounded = 0
                 reject(new Error('Something is not right!'));
             } else {
                 //if output.txt exists, read it
